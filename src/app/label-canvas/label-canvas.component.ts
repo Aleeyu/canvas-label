@@ -8,6 +8,7 @@ import {
     Router, ActivatedRoute,
     NavigationEnd
 } from "@angular/router";
+import { e } from '@angular/core/src/render3';
 
 @Component({
     selector: 'Label-canvas',
@@ -15,69 +16,82 @@ import {
     styleUrls: ['./label-canvas.component.css']
 })
 export class LableCanvasComponent implements OnInit, AfterViewInit {
+    /* 
+    options = {
+        width: 600,画布宽度
+        src: 'assets/1.jpg', 图片地址
+        color: "red",画笔颜色
+        activeColor:"green",选中项背景色
+        disabled: false是否禁用绘画
+    }
+    */
     @Input() options: any;
-    @Input() id: any;
-    @Output('canvasClick') canvasClick: EventEmitter<any> = new EventEmitter;
-    @Output('rollBackFun') rollBackFun: EventEmitter<any> = new EventEmitter;
-    @Output('deleteFun') deleteFun: EventEmitter<any> = new EventEmitter;
-    canvas = null;
-    ctx: any;
-    cvs: any
-    cvsH= 100
-    cvsW: any
-    imgH: any
-    imgW: any
-    imgLoaded = false
-    flag = false;
-    url: any
-    inited=false;
+    @Input() id: any;//用于画布和图片的id
+    @Input() geometryDatas = []//输入的矩形数据
+    @Output('canvasClick') canvasClick: EventEmitter<any> = new EventEmitter;//抛出点击事件，抛出数据当前项
+    @Output('rollBackFun') rollBackFun: EventEmitter<any> = new EventEmitter;//撤销，回退一步
+    @Output('deleteFun') deleteFun: EventEmitter<any> = new EventEmitter;//删除事件，当前项
+    ctx: any;//canvas画布2d对象
+    cvs: any//canvas
+    cvsH= 100//canvas高
+    cvsW: any//canvas宽
+    flag = false;//绘画使用开关，true开始绘画
+    url: any//每次保存的base64图片信息
     x = 0//鼠标开始移动的位置X
     y = 0//鼠标开始移动的位置Y
     geometryData: any
-    @Input() geometryDatas = []
-    cancelDraw = false
     lastUrl: any
     lastRect = null;//最后一次绘画的矩形
     imgsObj = [];//存储每次画布的对象
-    currentGeometry =null;
+    currentGeometry =null;//当前矩形坐标
     constructor() { }
     ngOnInit() { }
     ngAfterViewInit() {
         this.initImg()
     }
-    // ngOnChanges(){
-    //     console.log(1)
-    //     if (this.inited) {
-    //         console.log(this.geometryDatas)
-    //         this.initImg()
-    //     }
-    // }
     initImg() {
-        this.inited = true;
+        //初始化cnavas画布，初始化数据
         let img = document.getElementById(this.id+'img');
         this.url = this.options.src
-        // let mask = document.getElementById('common-canvas-mask');
-        // mask.style.width=this.options.width+'px'
         let that =this
-        let cvs=document.getElementById(this.id+'cvs') as HTMLCanvasElement;
         let cvsBox = document.getElementById('common-canvas')
-        cvs.style.zIndex = '5';
-        cvs.style.position = 'absolute';
-        cvs.style.left='0';
-        cvs.style.top='0';
-        let ctx= cvs.getContext('2d')
-        this.ctx = ctx;
-        this.cvs = cvs;
         img.onload=function(){
+            let cvs = document.createElement('canvas')
+            let mask = document.getElementById('common-canvas-mask');
+            cvs.id = that.id+'cvs';
+            cvsBox.appendChild(cvs);
             img.style.width=that.options.width+'px'
             that.cvsH= img.offsetHeight
             that.cvsW= img.offsetWidth
             cvsBox.style.width= that.cvsW+'px';
             cvsBox.style.height = that.cvsH+'px';
+            mask.style.width=that.cvsW+'px';
+            mask.style.height=that.cvsH+'px';
+            let HTMLCANVAS=(<HTMLCanvasElement>document.querySelector('#'+that.id+'cvs'));
+            let HTMLELM = (<HTMLElement>document.querySelector('#'+that.id+'cvs'));
+            HTMLCANVAS.width=img.offsetWidth;
+            HTMLCANVAS.height=img.offsetHeight;
+            HTMLELM.style.zIndex = '5';
+            HTMLELM.style.position = 'absolute';
+            HTMLELM.style.left='0';
+            HTMLELM.style.top='0';
+            let ctx= HTMLCANVAS.getContext('2d')
+            that.ctx = ctx;
+            that.cvs = HTMLCANVAS;
+            HTMLCANVAS.addEventListener('mousedown',(e:Event)=>{
+                that.mousedown(e)
+            })
+            HTMLCANVAS.addEventListener('mouseup',(e:Event)=>{
+                that.mouseup(e)
+            })
+            HTMLCANVAS.addEventListener('mousemove',(e:Event)=>{
+                that.mousemove(e)
+            })
             that.initDrawRect(that.geometryDatas)
         }
     }
     initDrawRect(d){
+        //初始化，绘画多个矩形
         for (let i of d) {
             this.drawRects(i)
         }
@@ -86,9 +100,6 @@ export class LableCanvasComponent implements OnInit, AfterViewInit {
         this.flag = true;
         this.x=e.offsetX
         this.y = e.offsetY
-        // console.log(this.x,this.y)
-        // let cvs = document.getElementById(this.id+'cvs') as HTMLCanvasElement;
-        // this.url = cvs.toDataURL()
     }
     mouseup(e){
         this.flag= false
@@ -102,20 +113,11 @@ export class LableCanvasComponent implements OnInit, AfterViewInit {
         }
         let x= e.offsetX
         let y = e.offsetY
-        console.log(1)
         for(let i of this.geometryDatas) {
             i.active = false;
-            // this.ctx.strokeStyle= 'transparent'
-            // this.initDrawRect(this.geometryDatas)
             if(x>i.geometry.x&&x<i.geometry.x+i.geometry.width&& y>i.geometry.y&&y<i.geometry.y+i.geometry.height){
                 
                 i.active = true
-                // if (i.active) {
-                //     this.ctx.strokeStyle= this.options.activeColor
-                // } else {
-                //     this.ctx.strokeStyle= this.options.color
-                // }
-                //this.initDrawRect(this.geometryDatas)
                 this.currentGeometry = i
                 this.initActiveDom(i)
                 this.canvasClick.emit(i)
@@ -123,7 +125,7 @@ export class LableCanvasComponent implements OnInit, AfterViewInit {
         }
     }
     rollBack(){
-        console.log(this.geometryDatas)
+        //撤销
         let lastGeometry = null;
         if (this.geometryDatas.length >0) {
             lastGeometry = this.geometryDatas[this.geometryDatas.length-1].geometry
@@ -141,6 +143,7 @@ export class LableCanvasComponent implements OnInit, AfterViewInit {
         }
     }
     initActiveDom(d){
+        //初始化当前项选中状态
         let activeDom = document.getElementById('rect-active');
             activeDom.style.width = d.geometry.width +'px';
             activeDom.style.height = d.geometry.height +'px';
@@ -150,6 +153,7 @@ export class LableCanvasComponent implements OnInit, AfterViewInit {
             activeDom.style.zIndex = '8';
     }
     resetActiveDom(){
+        //重置当前项选中状态
         let activeDom = document.getElementById('rect-active');
             activeDom.style.width = 0 +'px';
             activeDom.style.height = 0 +'px';
@@ -159,12 +163,9 @@ export class LableCanvasComponent implements OnInit, AfterViewInit {
             activeDom.style.zIndex = '0';
     }
     drawRects(d){
-        // console.log(d.geometry)
-        // console.log(d.id)
+        //画矩形
         if (d.active) {
             this.currentGeometry = d
-            console.log(d)
-            // this.ctx.strokeStyle= this.options.activeColor
             let activeDom = document.getElementById('rect-active');
             activeDom.style.width = d.geometry.width +'px';
             activeDom.style.height = d.geometry.height +'px';
@@ -202,25 +203,15 @@ export class LableCanvasComponent implements OnInit, AfterViewInit {
         }
     }
     loadImage(){
+        //储存画布
         let img = new Image()
         img.setAttribute("crossOrigin",'anonymous')
         img.src = this.url;
         this.ctx.drawImage(img,0,0,this.cvsW,this.cvsH)
         img = null
     }
-    cancelDrawRect(e){
-        let lastGeometry = this.geometryDatas[this.geometryDatas.length -1]
-        this.ctx.clearRect(lastGeometry.x,lastGeometry.y,lastGeometry.width,lastGeometry.height)
-        // let img = new Image()
-        // img.src=this.imgsObj[this.imgsObj.length]
-        // img.setAttribute('crossOrigin','Anonymous')
-        // this.ctx.drawImage(img,0,0,this.cvs.width,this.cvs.height)
-
-    }
-    errFunCallBack(type){
-        //this.errFun.emit(type)
-    }
     updateData(datas){
+        // 更新数据
         this.geometryDatas = datas;
         this.currentGeometry = null;
         this.resetActiveDom()
@@ -229,6 +220,7 @@ export class LableCanvasComponent implements OnInit, AfterViewInit {
         this.initDrawRect(this.geometryDatas)
     }
     delete(){
+        //删除
         this.deleteFun.emit(this.currentGeometry)
         let index = this.geometryDatas.findIndex((value) => {
             return (value.geometry.x == this.currentGeometry.geometry.x) && (value.geometry.y == this.currentGeometry.geometry.y)

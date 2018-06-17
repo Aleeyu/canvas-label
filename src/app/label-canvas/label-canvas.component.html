@@ -1,11 +1,11 @@
 <div class="common-canvas" id="common-canvas">
 
-    <canvas [id]=" id+ 'cvs'" [width]="options.width" height="283" (mousedown)="mousedown($event)" (mouseup)="mouseup($event)" (mousemove)="mousemove($event)">
+    <!-- <canvas [id]=" id+ 'cvs'" [width]="options.width" height="283" (mousedown)="mousedown($event)" (mouseup)="mouseup($event)" (mousemove)="mousemove($event)">
         <p>请使用支持HTML5的浏览器 查看本实例</p>
-    </canvas>
+    </canvas> -->
     <img [src]="options.src" [id]="id+'img'" />
     <div class="rect-active" id="rect-active" [ngStyle]="{background:options.activeColor}"></div>
-    <!-- <div class="common-canvas-mask" id="common-canvas-mask" [class.mask-hide]="options.disabled"></div> -->
+    <div class="common-canvas-mask" id="common-canvas-mask" [class.mask-hide]="options.disabled"></div>
 </div>
 <!-- <button (click)="rollBack()" [disabled]="geometryDatas.length==0">撤销</button> -->
 <button (click)="delete()" [disabled]="!currentGeometry">子组件删除</button>
