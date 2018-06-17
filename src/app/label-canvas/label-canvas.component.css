@@ -1,0 +1,28 @@
+.common-canvas{
+    position: relative;
+    cursor: pointer;
+    }
+.common-canvas>img,.common-canvas>cnavas,.common-canvas>.rect-active{
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+.common-canvas>img{
+    z-index: 2;
+}
+.common-canvas>cnavas{
+
+    z-index:3;
+}
+.common-canvas-mask{
+    width:100%;
+    height:100%;
+    position:absolute;
+    z-index:1;
+    left:0;
+    top:0;
+}
+.mask-hide{
+
+z-index:10;
+}

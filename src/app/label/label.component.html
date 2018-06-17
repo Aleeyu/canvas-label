@@ -1,0 +1,14 @@
+<Label-canvas
+#canvas
+[options]="options" 
+[id]="'cvs'" 
+[geometryDatas]="geometryDatas" 
+(canvasClick)="canvasClick($event)"
+(rollBackFun)="rollBackFun($event)"
+(deleteFun)="deleteFun($event)"
+></Label-canvas>
+<button (click)="delete()" [disabled]="!currentGeometry">父组件删除</button>
+<div *ngFor="let i of geometryDatas">
+    <p [class.active]="i == currentGeometry">{{i | json}}</p>
+</div>
+<button (click)="go()">跳转</button>
